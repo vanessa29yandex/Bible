@@ -1,1 +1,463 @@
-# Bible
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d1b2a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Стих дня" />
+  <meta name="description" content="Библейский стих для размышления каждый день" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Стих дня</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@300;400&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --night:   #0d1b2a;
+      --deep:    #112233;
+      --gold:    #c9a84c;
+      --gold-soft: #e2c97e;
+      --vellum:  #f0e6d0;
+      --muted:   #8da4b8;
+      --glow:    rgba(201,168,76,0.18);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--night);
+      color: var(--vellum);
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+    }
+
+    /* ── Stars background ── */
+    #stars {
+      position: fixed; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 100%, #112a44 0%, transparent 70%),
+        radial-gradient(ellipse 100% 50% at 50% 0%,  #0a1525 0%, transparent 80%),
+        var(--night);
+    }
+    #stars::before, #stars::after {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 20%  15%, rgba(255,255,255,.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 75%  8%,  rgba(255,255,255,.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 45%  30%, rgba(255,255,255,.3) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 10% 65%, rgba(255,255,255,.35) 0%, transparent 100%),
+        radial-gradient(1px 1px at 88%  50%, rgba(255,255,255,.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 60%  80%, rgba(255,255,255,.25) 0%, transparent 100%),
+        radial-gradient(1px 1px at 32%  90%, rgba(255,255,255,.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 95%  25%, rgba(255,255,255,.35) 0%, transparent 100%),
+        radial-gradient(1px 1px at 5%   42%, rgba(255,255,255,.2) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 55% 55%, rgba(201,168,76,.4) 0%, transparent 100%);
+      animation: twinkle 8s ease-in-out infinite alternate;
+    }
+    #stars::after { animation-delay: 4s; opacity: .6; transform: scale(1.05); }
+
+    @keyframes twinkle {
+      from { opacity: .7; }
+      to   { opacity: 1;  }
+    }
+
+    /* ── Main layout ── */
+    #app {
+      position: relative; z-index: 1;
+      height: 100dvh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: env(safe-area-inset-top, 24px) 32px env(safe-area-inset-bottom, 24px);
+      gap: 0;
+    }
+
+    /* ── Top date pill ── */
+    #date-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 300;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 40px;
+      opacity: 0;
+      animation: fadeUp .8s .2s ease forwards;
+    }
+
+    /* ── Candle glow halo ── */
+    #halo {
+      position: absolute;
+      width: min(420px, 90vw); height: min(420px, 90vw);
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--glow) 0%, transparent 70%);
+      animation: pulse 5s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1);    opacity: .7; }
+      50%       { transform: scale(1.12); opacity: 1;  }
+    }
+
+    /* ── Ornament ── */
+    .ornament {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 28px;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: fadeUp .8s .4s ease forwards;
+    }
+
+    /* ── Verse card ── */
+    #verse-card {
+      position: relative;
+      text-align: center;
+      max-width: 520px;
+      width: 100%;
+    }
+
+    #verse-text {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: clamp(22px, 5.5vw, 32px);
+      font-style: italic;
+      font-weight: 400;
+      line-height: 1.65;
+      color: var(--vellum);
+      letter-spacing: .01em;
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: fadeUp .9s .6s ease forwards;
+    }
+
+    /* gold hairline above reference */
+    #verse-card::after {
+      content: '';
+      display: block;
+      width: 48px; height: 1px;
+      background: var(--gold);
+      margin: 0 auto 20px;
+      opacity: 0;
+      animation: fadeUp .8s .9s ease forwards;
+    }
+
+    #verse-ref {
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--gold-soft);
+      opacity: 0;
+      animation: fadeUp .8s 1.1s ease forwards;
+    }
+
+    /* ── Reflection label ── */
+    #reflection {
+      margin-top: 44px;
+      font-size: 11px;
+      font-weight: 300;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      opacity: 0;
+      animation: fadeUp .8s 1.4s ease forwards;
+    }
+
+    /* ── Nav dots ── */
+    #dots {
+      position: absolute;
+      bottom: calc(env(safe-area-inset-bottom, 20px) + 24px);
+      display: flex; gap: 8px;
+      opacity: 0;
+      animation: fadeUp .8s 1.6s ease forwards;
+    }
+    .dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: background .3s, transform .3s;
+      cursor: pointer;
+    }
+    .dot.active { background: var(--gold); transform: scale(1.4); }
+
+    /* ── Share button ── */
+    #share-btn {
+      position: absolute;
+      top: calc(env(safe-area-inset-top, 16px) + 16px);
+      right: 24px;
+      background: transparent;
+      border: 1px solid rgba(201,168,76,.35);
+      border-radius: 50px;
+      padding: 7px 16px;
+      color: var(--gold-soft);
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background .25s, border-color .25s;
+      opacity: 0;
+      animation: fadeUp .8s 1.8s ease forwards;
+    }
+    #share-btn:hover { background: rgba(201,168,76,.12); border-color: var(--gold); }
+    #share-btn:active { background: rgba(201,168,76,.2); }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 40px; left: 50%; transform: translateX(-50%) translateY(10px);
+      background: var(--deep);
+      border: 1px solid rgba(201,168,76,.3);
+      border-radius: 24px;
+      padding: 10px 22px;
+      font-size: 12px;
+      letter-spacing: .08em;
+      color: var(--gold-soft);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s, transform .3s;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0);    }
+    }
+
+    /* fade-out class for verse transition */
+    .fade-out { animation: fadeOut .4s ease forwards !important; }
+    @keyframes fadeOut {
+      to { opacity: 0; transform: translateY(-8px); }
+    }
+
+    /* Install banner */
+    #install-banner {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(135deg, #112233, #0d1b2a);
+      border-top: 1px solid rgba(201,168,76,.25);
+      padding: 16px 24px calc(env(safe-area-inset-bottom, 0px) + 16px);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      transform: translateY(100%);
+      transition: transform .4s ease;
+      z-index: 99;
+    }
+    #install-banner.show { transform: translateY(0); }
+    #install-banner p { font-size: 13px; color: var(--muted); line-height: 1.5; flex: 1; }
+    #install-banner p strong { color: var(--vellum); display: block; }
+    #install-btn {
+      background: var(--gold);
+      color: var(--night);
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: .08em;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    #dismiss-btn {
+      background: transparent; border: none;
+      color: var(--muted); font-size: 20px;
+      cursor: pointer; line-height: 1; padding: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="stars"></div>
+
+<div id="app">
+  <button id="share-btn">Поделиться</button>
+
+  <div id="date-label"></div>
+  <div id="halo"></div>
+
+  <div class="ornament">✦</div>
+
+  <div id="verse-card">
+    <div id="verse-text"></div>
+    <div id="verse-ref"></div>
+  </div>
+
+  <div id="reflection">Стих для размышления</div>
+  <div id="dots"></div>
+</div>
+
+<div id="toast"></div>
+
+<div id="install-banner">
+  <div>
+    <strong>Добавить на экран</strong>
+    <p>Открывайте стих дня прямо с главного экрана</p>
+  </div>
+  <button id="install-btn">Добавить</button>
+  <button id="dismiss-btn">✕</button>
+</div>
+
+<script>
+// ── Bible verses dataset ──────────────────────────────────────────────
+const verses = [
+  { text: "Господь — пастырь мой; я ни в чём не буду нуждаться.", ref: "Псалом 22:1" },
+  { text: "Ибо так возлюбил Бог мир, что отдал Сына Своего Единородного, дабы всякий, верующий в Него, не погиб, но имел жизнь вечную.", ref: "Иоанна 3:16" },
+  { text: "Во всём поступайте с людьми так, как хотите, чтобы они поступали с вами.", ref: "Матфея 7:12" },
+  { text: "Надейся на Господа всем сердцем твоим и не полагайся на разум твой.", ref: "Притчи 3:5" },
+  { text: "Я есмь путь и истина и жизнь; никто не приходит к Отцу, как только через Меня.", ref: "Иоанна 14:6" },
+  { text: "Господь — свет мой и спасение моё: кого мне бояться?", ref: "Псалом 26:1" },
+  { text: "Не бойся, ибо Я с тобою; не смущайся, ибо Я Бог твой.", ref: "Исаия 41:10" },
+  { text: "Блаженны чистые сердцем, ибо они Бога узрят.", ref: "Матфея 5:8" },
+  { text: "Любовь долготерпит, милосердствует, любовь не завидует, не превозносится, не гордится.", ref: "1 Коринфянам 13:4" },
+  { text: "Просите, и дано будет вам; ищите, и найдёте; стучите, и отворят вам.", ref: "Матфея 7:7" },
+  { text: "Всё могу в укрепляющем меня Иисусе Христе.", ref: "Филиппийцам 4:13" },
+  { text: "По плодам их узнаете их.", ref: "Матфея 7:16" },
+  { text: "Возлюби Господа Бога твоего всем сердцем твоим, и всею душою твоею, и всем разумением твоим.", ref: "Матфея 22:37" },
+  { text: "Радуйтесь всегда в Господе; и ещё говорю: радуйтесь.", ref: "Филиппийцам 4:4" },
+  { text: "Господь хранит тебя; Господь — сень твоя с правой руки твоей.", ref: "Псалом 120:5" },
+  { text: "Придите ко Мне все труждающиеся и обременённые, и Я успокою вас.", ref: "Матфея 11:28" },
+  { text: "Начало мудрости — страх Господень.", ref: "Притчи 1:7" },
+  { text: "Мир оставляю вам, мир Мой даю вам.", ref: "Иоанна 14:27" },
+  { text: "Ибо Я знаю намерения, какие имею о вас, говорит Господь, — намерения во благо, а не на зло.", ref: "Иеремии 29:11" },
+  { text: "Но ищите прежде Царства Божия и правды Его, и это всё приложится вам.", ref: "Матфея 6:33" },
+  { text: "Слово Твоё — светильник ноге моей и свет стезе моей.", ref: "Псалом 118:105" },
+  { text: "Благодарите за всё: ибо такова о вас воля Божия во Христе Иисусе.", ref: "1 Фессалоникийцам 5:18" },
+  { text: "Господь близок. Не заботьтесь ни о чём, но всегда в молитве и прошении с благодарением открывайте свои желания пред Богом.", ref: "Филиппийцам 4:5–6" },
+  { text: "Блаженны миротворцы, ибо они будут наречены сынами Божиими.", ref: "Матфея 5:9" },
+  { text: "Уповай на Господа и делай добро.", ref: "Псалом 36:3" },
+  { text: "Твёрдого духом Ты хранишь в совершенном мире, ибо он уповает на Тебя.", ref: "Исаия 26:3" },
+  { text: "Я есмь воскресение и жизнь; верующий в Меня, если и умрёт, оживёт.", ref: "Иоанна 11:25" },
+  { text: "Смирение предшествует славе.", ref: "Притчи 15:33" },
+  { text: "Возложи на Господа заботы твои, и Он поддержит тебя.", ref: "Псалом 54:23" },
+  { text: "Ибо благодатью вы спасены через веру, и сие не от вас — Божий дар.", ref: "Ефесянам 2:8" },
+  { text: "Будьте добры друг ко другу, сострадательны, прощайте друг друга, как и Бог во Христе простил вас.", ref: "Ефесянам 4:32" },
+  { text: "Так и вера, если не имеет дел, мертва сама по себе.", ref: "Иакова 2:17" },
+  { text: "Дети мои! станем любить не словом или языком, но делом и истиной.", ref: "1 Иоанна 3:18" },
+  { text: "Всё могу через Христа, укрепляющего меня.", ref: "Филиппийцам 4:13" },
+  { text: "Имея пропитание и одежду, будем довольны тем.", ref: "1 Тимофею 6:8" },
+  { text: "Господь есть Дух; а где Дух Господень, там свобода.", ref: "2 Коринфянам 3:17" },
+  { text: "Не будь побеждён злом, но побеждай зло добром.", ref: "Римлянам 12:21" },
+],
+
+// ── State ───────────────────────────────────────────────────────────
+current = 0;
+
+// ── Determine today's verse (stable per calendar day) ───────────────
+function todayIndex() {
+  const d = new Date();
+  const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  return seed % verses.length;
+}
+
+// ── Render ──────────────────────────────────────────────────────────
+function renderVerse(idx, animate = false) {
+  current = ((idx % verses.length) + verses.length) % verses.length;
+  const { text, ref } = verses[current];
+  const vt = document.getElementById('verse-text');
+  const vr = document.getElementById('verse-ref');
+
+  if (animate) {
+    vt.classList.add('fade-out');
+    vr.classList.add('fade-out');
+    setTimeout(() => {
+      vt.classList.remove('fade-out');
+      vr.classList.remove('fade-out');
+      vt.textContent = text;
+      vr.textContent = ref;
+    }, 420);
+  } else {
+    vt.textContent = text;
+    vr.textContent = ref;
+  }
+
+  updateDots();
+}
+
+// ── Dots ─────────────────────────────────────────────────────────────
+function buildDots() {
+  const container = document.getElementById('dots');
+  container.innerHTML = '';
+  const count = Math.min(verses.length, 7);
+  for (let i = 0; i < count; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => renderVerse(i, true));
+    container.appendChild(d);
+  }
+}
+function updateDots() {
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    d.classList.toggle('active', i === current % 7);
+  });
+}
+
+// ── Date label ───────────────────────────────────────────────────────
+function setDate() {
+  const opts = { weekday: 'long', day: 'numeric', month: 'long' };
+  const label = new Date().toLocaleDateString('ru-RU', opts);
+  document.getElementById('date-label').textContent = label;
+}
+
+// ── Swipe gesture ────────────────────────────────────────────────────
+let touchX = 0;
+document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => {
+  const dx = touchX - e.changedTouches[0].clientX;
+  if (Math.abs(dx) > 50) renderVerse(current + (dx > 0 ? 1 : -1), true);
+}, { passive: true });
+
+// ── Share ─────────────────────────────────────────────────────────────
+document.getElementById('share-btn').addEventListener('click', async () => {
+  const { text, ref } = verses[current];
+  const shareText = `«${text}» — ${ref}`;
+  if (navigator.share) {
+    try { await navigator.share({ text: shareText }); } catch {}
+  } else {
+    await navigator.clipboard.writeText(shareText);
+    showToast('Стих скопирован в буфер обмена');
+  }
+});
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── PWA install banner ────────────────────────────────────────────────
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  setTimeout(() => document.getElementById('install-banner').classList.add('show'), 3000);
+});
+document.getElementById('install-btn').addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') document.getElementById('install-banner').classList.remove('show');
+    deferredPrompt = null;
+  }
+});
+document.getElementById('dismiss-btn').addEventListener('click', () => {
+  document.getElementById('install-banner').classList.remove('show');
+});
+
+// ── Init ──────────────────────────────────────────────────────────────
+setDate();
+buildDots();
+renderVerse(todayIndex());
+
+// Register service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
